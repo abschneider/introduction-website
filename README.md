@@ -2,7 +2,7 @@
 Code to generate a webpage displaying introductions inferred via [matUtils introduce](https://usher-wiki.readthedocs.io/en/latest/matUtils.html#introduce). Contains additional scripts and files required to generate a map for each state of the United States. To construct a site for a different region, additional files and preprocessing is required.
 
 ## Quickstart: Display the United States
-Clone this repository into your workspace of choice, then obtain the [latest public data from the MAT repository](http://hgdownload.soe.ucsc.edu/goldenPath/wuhCor1/UShER_SARS-CoV-2/)- specifically, "public-latest.all.masked.pb" and "public-latest.metadata.tsv.gz". Unzip the metadata file with your preferred tool. Additionally download the [gtf](https://usher-wiki.readthedocs.io/en/latest/_downloads/2052d9a7147253e32a3420939550ac63/ncbiGenes.gtf) and [reference](https://raw.githubusercontent.com/yatisht/usher/5e83b71829dbe54a37af845fd23d473a8f67b839/test/NC_045512v2.fa) files to produce a taxodium view. 
+Clone this repository into your workspace of choice, then obtain the [latest public data from the MAT repository](http://hgdownload.soe.ucsc.edu/goldenPath/wuhCor1/UShER_SARS-CoV-2/)- specifically, "public-latest.all.masked.pb" and "public-latest.metadata.tsv.gz". Unzip the metadata file with your preferred tool. Additionally download the [gtf](https://usher-wiki.readthedocs.io/en/latest/_downloads/2052d9a7147253e32a3420939550ac63/ncbiGenes.gtf) and [reference](https://raw.githubusercontent.com/yatisht/usher/5e83b71829dbe54a37af845fd23d473a8f67b839/test/NC_045512v2.fa) files to produce a taxonium view. 
 
 Navigate to the "data" directory and run "prepare_us_states.py" with the files obtained above, ala the below.
 
@@ -37,4 +37,4 @@ Then navigate to the outermost index directory and run
 python3 -m http.server
 ```
 
-It is not required to make the website on a web-accessible directory, but the taxodium view (clicking view cluster on the site) will not function if it's not. You can work around this by uploading the cview.pb / cluster_taxodium.pb that is output by the pipeline directly to [taxodium](https://cov2tree.org/), then search for your cluster of interest from the website table using the search box on the resulting display. 
+It is not required to make the website on a web-accessible directory, but the taxonium view (clicking view cluster on the site) will not function if it's not. You can work around this by uploading the cview.pb / cluster_taxonium.pb that is output by the pipeline directly to [taxonium](https://cov2tree.org/), then search for your cluster of interest from the website table using the search box on the resulting display. 
