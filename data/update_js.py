@@ -13,6 +13,10 @@ def update_js(target, conversion = {}):
     conversion["indeterminate"] = "indeterminate"
     #ivc = cdf.region.value_counts()
     datepoints = ["all", dt.date.today()-relativedelta(months=12), dt.date.today()-relativedelta(months=6), dt.date.today()-relativedelta(months=3)]
+    #here, the data is stored in a series of dictionaries
+    #which are generally structured with the minimum date as the outermost layer
+    #then the destination of an introduction
+    #than the source of an introduction
     prefd = {datepoints[0]:"", datepoints[1]:"12_", datepoints[2]:"6_", datepoints[3]:"3_"}
     dinvc = {d:{} for d in datepoints}
     dsvc = {d:{} for d in datepoints}
@@ -23,7 +27,7 @@ def update_js(target, conversion = {}):
             spent = entry.strip().split("\t")
             if spent[0] == "cluster_id":
                 continue
-            reg = conversion[spent[9]]
+            reg = conversion.get(spent[9],spent[9])
             if spent[10] == "indeterminate":
                 continue
             #get the date of this cluster's earliest sample into a usable form
@@ -44,10 +48,7 @@ def update_js(target, conversion = {}):
                     ovc = dovc[startdate]
                     if reg not in ovc:
                         ovc[reg] = {}
-                    confidence = [float(c) for c in spent[11].split(",")]
-                    for i,tlo in enumerate(spent[10].split(",")):
-                        if confidence[i] < 0.1:
-                            continue
+                    for tlo in spent[10].split(","):
                         orig = conversion[tlo]
                         if orig not in otvc:
                             otvc[orig] = 0
@@ -56,18 +57,14 @@ def update_js(target, conversion = {}):
                             ovc[reg][orig] = 0
                         ovc[reg][orig] += 1
     dsumin = {sd:sum(invc.values()) for sd,invc in dinvc.items()}
-    #print(invc.keys())
     sids = {}
-    #with open(target) as inf:
     f = open(target)
     geojson_lines = json.load(f)
     f.close()
     id = 0
+    #we fill in the basic count of introductions to each area first
+    #as well as fill in an integer "ID" if its not already present
     for data in geojson_lines["features"]:
-        # for entry in inf:
-            # if entry[0:2] == "//" or entry[0:3] == "var" or entry[0] == "]":
-                # continue
-        # data = ast.literal_eval(entry.strip().strip(","))
         data["properties"]["intros"] = {}
         for sd, invc in dinvc.items():
             prefix = prefd[sd]
@@ -83,23 +80,31 @@ def update_js(target, conversion = {}):
     for ftd in svd["features"]:
         #update the ftd["properties"]["intros"] with each state
         #state introductions to itself, for now, I will fill with indeterminate
+        #this is transposed so that the introductions to each state are stored across each other state by origin
+        #in order that coloring and hovertext can be correctly accessed.
         iid = ftd['properties']["name"]
+        #for timeslice
         for sd, ovc in dovc.items():
+            #get everything where this specific row/region is an origin
             prefix = prefd[sd]
-            for origin, count in ovc[iid].items():
+            #fill with 0
+            inv_ovc = {k:sd.get(iid,0) for k,sd in ovc.items()}
+            for destination, count in inv_ovc.items():
                 #scale the count for display
-                if origin in sids:
-                    oid = sids[origin]
-                else:
-                    oid = sids[iid]
-                ftd["properties"]["intros"][prefix + "raw" + oid] = count
+                if destination == "indeterminate":
+                    continue
+                did = sids[conversion.get(destination,destination)]
+                ftd["properties"]["intros"][prefix + "raw" + did] = count
                 if count > 5:
                     sumin = dsumin[sd]
                     invc = dinvc[sd]
                     otvc = dotvc[sd]
-                    ftd["properties"]["intros"][prefix + oid] = math.log10(count * sumin / invc[iid] / otvc[origin])
+                    ftd["properties"]["intros"][prefix + did] = math.log10(count * sumin / invc[destination] / otvc[iid])
                 else:
-                    ftd["properties"]["intros"][prefix + oid] = -0.5
+                    #if there are less than 5 counts, the log correction can do some pretty extreme highlighting
+                    #for example, even a single introduction between two distant places may be surprising
+                    #but that doesn't mean it should get a lot of emphasis. So we cut off anything with less than 5 introductions total.
+                    ftd["properties"]["intros"][prefix + did] = -0.5
     with open("regions.js","w") as outf:
         print("//data updated via update_js.py",file=outf)
         print('var None = "None"',file=outf)
